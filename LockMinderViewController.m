@@ -64,7 +64,10 @@ NSString *userPlaceHolder;
     }];
     
    [self.refreshControl endRefreshing];
-    [self.tableView reloadData];
+    NSRange range = NSMakeRange(0, [self numberOfSectionsInTableView:self.tableView]);
+    NSIndexSet *sections = [NSIndexSet indexSetWithIndexesInRange:range];
+    [self.tableView reloadSections:sections withRowAnimation:UITableViewRowAnimationAutomatic];
+
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -94,19 +97,21 @@ NSString *userPlaceHolder;
                                   reuseIdentifier:@"Cell"];
   }
     EKReminder *evnt = self.events[indexPath.row];
-    
-    NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-    NSDate *date = [gregorianCalendar dateFromComponents:evnt.dueDateComponents];
-    
-    NSString * str = @"";
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateStyle:NSDateFormatterNoStyle];
-    [formatter setTimeStyle:NSDateFormatterShortStyle];
-    
-    str = [str stringByAppendingString: [formatter stringFromDate:date]];
-    str = [str stringByAppendingString:@" - "];
-    str = [str stringByAppendingString:evnt.title];
-    cell.textLabel.text = str;
+    if (evnt.dueDateComponents != nil) {
+        NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDate *date = [gregorianCalendar dateFromComponents:evnt.dueDateComponents];
+        
+        
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateStyle:NSDateFormatterMediumStyle];
+        [formatter setTimeStyle:NSDateFormatterShortStyle];
+        
+        
+        cell.textLabel.text = [NSString stringWithFormat:@"%@ - %@", evnt.title, [formatter stringFromDate: date]];
+    }else{
+        cell.textLabel.text = [NSString stringWithFormat:@"%@ - No due date", evnt.title];
+    }
+
     cell.textLabel.textColor = [UIColor whiteColor];
     cell.backgroundColor = [UIColor clearColor];
   return cell;
@@ -124,8 +129,14 @@ NSString *userPlaceHolder;
 }
 - (void)pageDidPresent {
   NSLog(@"pageDidPresent called!");
-     [self updateView];
-    [self.tableView reloadData];
+
+    [NSTimer scheduledTimerWithTimeInterval:0.2
+                                     target:self
+                                   selector:@selector(updateView)
+                                   userInfo:nil
+                                    repeats:NO];
+    
+    //becuase for some reason, we cant fetch until its 100% loaded..uuugggh
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -139,17 +150,33 @@ NSString *userPlaceHolder;
 - (void)pageDidDismiss {
   NSLog(@"pageDidDismiss called!");
 }
-
+- (void)viewDidAppear:(BOOL)animated{
+    [self updateView];
+    [super viewDidAppear: true];
+}
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
  
-   
+    self.hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    self.hud.mode = MBProgressHUDModeCustomView;
+    // Set an image view with a checkmark.
+    UIImage *image = [[UIImage
+                       imageWithContentsOfFile:@"/Library/Application "
+                       @"Support/LockMinder/Contents/"
+                       @"Resources/check.png"]
+                      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    UIImageView *imageView =
+    [[UIImageView alloc] initWithImage:image];
+    imageView.frame = CGRectMake(0, 0, 100, 100);
+    [imageView setTintColor:[UIColor whiteColor]];
+    self.hud.customView = imageView;
+    self.hud.labelText = NSLocalizedString(@"Completed!", @"HUD done title");
     EKReminder *event = self.events[indexPath.row];
     event.completed = true;
     [self.store saveReminder: event commit: true error: nil];
     [self.events removeObjectAtIndex: indexPath.row];
     [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
   
-
+     [self.hud hide:true afterDelay:1.0f];
 }
 - (CGFloat)idleTimerInterval {
   return 60;
