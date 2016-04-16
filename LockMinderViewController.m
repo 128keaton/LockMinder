@@ -38,31 +38,43 @@ NSString *userPlaceHolder;
 - (void)pageWillPresent {
   NSLog(@"pageWillPresent called!");
 
-    [self updateView];
+   
     
 }
 -(void)updateView{
-    EKEventStore *store = [[EKEventStore alloc] init];
+  
+    if(self.store == nil){
+        self.store = [[EKEventStore alloc] init];
+    }
+    NSSortDescriptor *sortDescriptor;
+    sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES] ;
+    NSArray *sortDescriptors = [NSArray arrayWithObject:sortDescriptor];
     
-    NSPredicate *predicate = [store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
+    NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
     
-    NSPredicate *completePredicate = [store predicateForCompletedRemindersWithCompletionDateStarting: nil ending: nil calendars: nil];
+    NSPredicate *completePredicate = [self.store predicateForCompletedRemindersWithCompletionDateStarting: nil ending: nil calendars: nil];
     
-    [store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
-        self.events = [completed mutableCopy];
+    [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
+        self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
         
     }];
-    [store fetchRemindersMatchingPredicate:completePredicate completion:^(NSArray *incompleted) {
-        self.completed = [incompleted mutableCopy];
+    [self.store fetchRemindersMatchingPredicate:completePredicate completion:^(NSArray *incompleted) {
+        self.completed = [[incompleted sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
         
     }];
-    [self.tableView reloadData];
+    
    [self.refreshControl endRefreshing];
+    [self.tableView reloadData];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
   // Return the number of sections.
-  return 2;
+  return 1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 35.0;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView
@@ -81,27 +93,27 @@ NSString *userPlaceHolder;
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
                                   reuseIdentifier:@"Cell"];
   }
-    if(indexPath.section == 0){
-        EKEvent * evnt = self.events[indexPath.row];
-        cell.textLabel.text = evnt.title;
-    }else{
-        EKEvent * evnt = self.completed[indexPath.row];
-        cell.textLabel.text = evnt.title;
-    }
-
+    EKReminder *evnt = self.events[indexPath.row];
+    
+    NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDate *date = [gregorianCalendar dateFromComponents:evnt.dueDateComponents];
+    
+    NSString * str = @"";
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateStyle:NSDateFormatterNoStyle];
+    [formatter setTimeStyle:NSDateFormatterShortStyle];
+    
+    str = [str stringByAppendingString: [formatter stringFromDate:date]];
+    str = [str stringByAppendingString:@" - "];
+    str = [str stringByAppendingString:evnt.title];
+    cell.textLabel.text = str;
     cell.textLabel.textColor = [UIColor whiteColor];
     cell.backgroundColor = [UIColor clearColor];
   return cell;
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    if (section == 1){
-
-        return @"Completed";
-    }else{
-        return @"Incomplete";
-    }
-    return nil;
+    return @"Incomplete";
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -112,6 +124,8 @@ NSString *userPlaceHolder;
 }
 - (void)pageDidPresent {
   NSLog(@"pageDidPresent called!");
+     [self updateView];
+    [self.tableView reloadData];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -126,6 +140,17 @@ NSString *userPlaceHolder;
   NSLog(@"pageDidDismiss called!");
 }
 
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+ 
+   
+    EKReminder *event = self.events[indexPath.row];
+    event.completed = true;
+    [self.store saveReminder: event commit: true error: nil];
+    [self.events removeObjectAtIndex: indexPath.row];
+    [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
+  
+
+}
 - (CGFloat)idleTimerInterval {
   return 60;
 }
