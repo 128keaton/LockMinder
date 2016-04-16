@@ -129,14 +129,15 @@ NSString *userPlaceHolder;
 }
 - (void)pageDidPresent {
   NSLog(@"pageDidPresent called!");
-
+     [self updateView];
+    NSRange range = NSMakeRange(0, [self numberOfSectionsInTableView:self.tableView]);
+    NSIndexSet *sections = [NSIndexSet indexSetWithIndexesInRange:range];
+    [self.tableView reloadSections:sections withRowAnimation:UITableViewRowAnimationAutomatic];
     [NSTimer scheduledTimerWithTimeInterval:0.2
                                      target:self
                                    selector:@selector(updateView)
                                    userInfo:nil
                                     repeats:NO];
-    
-    //becuase for some reason, we cant fetch until its 100% loaded..uuugggh
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
