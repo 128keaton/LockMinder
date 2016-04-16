@@ -28,7 +28,7 @@ NSString *userPlaceHolder;
   refreshControl.backgroundColor = [UIColor clearColor];
   refreshControl.tintColor = [UIColor whiteColor];
   [refreshControl addTarget:self
-                     action:@selector(pageWillPresent)
+                     action:@selector(updateView)
            forControlEvents:UIControlEventValueChanged];
     [self setRefreshControl:refreshControl];
 
@@ -38,28 +38,40 @@ NSString *userPlaceHolder;
 - (void)pageWillPresent {
   NSLog(@"pageWillPresent called!");
 
+    [self updateView];
+    
+}
+-(void)updateView{
     EKEventStore *store = [[EKEventStore alloc] init];
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDate *startDate = [calendar dateBySettingHour:0  minute:0  second:0  ofDate:[NSDate date] options:0];
-    NSDate *endDate   = [calendar dateBySettingHour:23 minute:59 second:59 ofDate:[NSDate date] options:0];
     
-    NSPredicate *predicate = [store predicateForEventsWithStartDate:startDate
-                                                            endDate:endDate
-                                                          calendars:nil];
+    NSPredicate *predicate = [store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
     
-    self.events = [store eventsMatchingPredicate:predicate];
+    NSPredicate *completePredicate = [store predicateForCompletedRemindersWithCompletionDateStarting: nil ending: nil calendars: nil];
+    
+    [store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
+        self.events = [completed mutableCopy];
+        
+    }];
+    [store fetchRemindersMatchingPredicate:completePredicate completion:^(NSArray *incompleted) {
+        self.completed = [incompleted mutableCopy];
+        
+    }];
     [self.tableView reloadData];
-    
+   [self.refreshControl endRefreshing];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
   // Return the number of sections.
-  return 1;
+  return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView
  numberOfRowsInSection:(NSInteger)section {
-  return self.events.count;
+    if (section == 0) {
+         return self.events.count;
+    }else{
+         return self.completed.count;
+    }
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -69,8 +81,27 @@ NSString *userPlaceHolder;
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
                                   reuseIdentifier:@"Cell"];
   }
+    if(indexPath.section == 0){
+        EKEvent * evnt = self.events[indexPath.row];
+        cell.textLabel.text = evnt.title;
+    }else{
+        EKEvent * evnt = self.completed[indexPath.row];
+        cell.textLabel.text = evnt.title;
+    }
 
+    cell.textLabel.textColor = [UIColor whiteColor];
+    cell.backgroundColor = [UIColor clearColor];
   return cell;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    if (section == 1){
+
+        return @"Completed";
+    }else{
+        return @"Incomplete";
+    }
+    return nil;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
