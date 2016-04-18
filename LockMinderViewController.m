@@ -3,6 +3,7 @@
 #import "MBProgressHUD.h"
 #import "Social/Social.h"
 #import <EventKit/EventKit.h>
+#import "LPReminderCell.h"
 #define NSLog(LogContents, ...)                                                \
   NSLog((@"LPInterfaceBuilderExample: %s:%d " LogContents), __FUNCTION__,      \
         __LINE__, ##__VA_ARGS__)
@@ -16,8 +17,8 @@ NSString *userPlaceHolder;
   if (self) {
     _ibView = [[
         [NSBundle bundleWithPath:
-                      @"/Library/Application Support/LPInterfaceBuilderExample"]
-        loadNibNamed:@"LPTwitterView"
+                      @"/Library/Application Support/LockMinder"]
+        loadNibNamed:@"LPReminderView"
                owner:self
              options:nil] objectAtIndex:0];
     [self setView:_ibView];
@@ -31,6 +32,12 @@ NSString *userPlaceHolder;
                      action:@selector(updateView)
            forControlEvents:UIControlEventValueChanged];
     [self setRefreshControl:refreshControl];
+
+
+    
+    UINib *nib = [UINib nibWithNibName:@"LPReminderCell" bundle:[NSBundle bundleWithPath:@"/Library/Application Support/LockMinder"]];
+    [[self tableView] registerNib:nib forCellReuseIdentifier:@"Cell"];
+    
 
   return self;
 }
@@ -90,12 +97,9 @@ NSString *userPlaceHolder;
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-  UITableViewCell *cell =
+  LPReminderCell *cell =
       [self.tableView dequeueReusableCellWithIdentifier:@"Cell"];
-  if (cell == nil) {
-    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
-                                  reuseIdentifier:@"Cell"];
-  }
+
     EKReminder *evnt = self.events[indexPath.row];
     if (evnt.dueDateComponents != nil) {
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -107,15 +111,20 @@ NSString *userPlaceHolder;
         [formatter setTimeStyle:NSDateFormatterShortStyle];
         
         
-        cell.textLabel.text = [NSString stringWithFormat:@"%@ - %@", evnt.title, [formatter stringFromDate: date]];
+        cell.dateLabel.text =  [formatter stringFromDate: date];
     }else{
-        cell.textLabel.text = [NSString stringWithFormat:@"%@ - No due date", evnt.title];
+        cell.dateLabel.text = @"No due date";
     }
+    
 
-    cell.textLabel.textColor = [UIColor whiteColor];
+    cell.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    cell.titleLabel.numberOfLines = 0;
+    cell.titleLabel.textColor = [UIColor whiteColor];
     cell.backgroundColor = [UIColor clearColor];
   return cell;
 }
+
+
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     return @"Incomplete";
@@ -138,6 +147,8 @@ NSString *userPlaceHolder;
                                    selector:@selector(updateView)
                                    userInfo:nil
                                     repeats:NO];
+    self.tableView.estimatedRowHeight = 100.0;
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
