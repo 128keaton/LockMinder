@@ -111,10 +111,10 @@ NSString *userPlaceHolder;
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateStyle:NSDateFormatterMediumStyle];
         [formatter setTimeStyle:NSDateFormatterShortStyle];
-        if ([date compare:[NSDate date]] == NSOrderedDescending) {
+        if ([[NSDate date] compare: date] == NSOrderedDescending) {
             NSLog(@"date1 is later than date2");
              cell.urgencyLabel.backgroundColor = [UIColor redColor];
-        } else if ([date compare:[NSDate date]] == NSOrderedAscending) {
+        } else if ([[NSDate date] compare: date] == NSOrderedAscending) {
             NSLog(@"date1 is earlier than date2");
              cell.urgencyLabel.backgroundColor = [UIColor greenColor];
         } else {
