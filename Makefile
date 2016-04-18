@@ -28,3 +28,5 @@ before-all::
 
 after-install::
 	install.exec "killall backboardd"
+SUBPROJECTS += preferences
+include $(THEOS_MAKE_PATH)/aggregate.mk
