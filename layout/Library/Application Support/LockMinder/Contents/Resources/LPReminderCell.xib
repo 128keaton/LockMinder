@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
@@ -13,26 +14,45 @@
                 <rect key="frame" x="0.0" y="0.0" width="320" height="99"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <label opaque="NO" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v5u-be-45Y">
-                        <rect key="frame" x="43" y="70" width="269" height="21"/>
+                    <label opaque="NO" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v5u-be-45Y">
+                        <rect key="frame" x="43" y="55" width="269" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="269" id="GfX-sw-TU9"/>
+                            <constraint firstAttribute="height" constant="21" id="wlL-0P-QNA"/>
+                        </constraints>
                         <fontDescription key="fontDescription" type="system" pointSize="16"/>
                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <nil key="highlightedColor"/>
                     </label>
-                    <label opaque="NO" userInteractionEnabled="NO" tag="3" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aBJ-tV-rF6">
-                        <rect key="frame" x="0.0" y="0.0" width="35" height="99"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <label opaque="NO" userInteractionEnabled="NO" tag="2" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WM3-X5-Cgy">
+                        <rect key="frame" x="43" y="24" width="269" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="21"/>
                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <nil key="highlightedColor"/>
                     </label>
-                    <label opaque="NO" userInteractionEnabled="NO" tag="2" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WM3-X5-Cgy">
-                        <rect key="frame" x="43" y="39" width="269" height="21"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="21"/>
+                    <label opaque="NO" userInteractionEnabled="NO" tag="3" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aBJ-tV-rF6">
+                        <rect key="frame" x="8" y="37" width="25" height="25"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="25" id="KL1-mi-hyG"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <nil key="highlightedColor"/>
                     </label>
                 </subviews>
                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                <constraints>
+                    <constraint firstItem="WM3-X5-Cgy" firstAttribute="top" secondItem="4bv-YX-ydU" secondAttribute="topMargin" constant="16" id="1l1-ii-Isq"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="v5u-be-45Y" secondAttribute="bottom" constant="15" id="6ov-YL-Eeh"/>
+                    <constraint firstItem="WM3-X5-Cgy" firstAttribute="trailing" secondItem="v5u-be-45Y" secondAttribute="trailing" id="Qd6-T3-q6H"/>
+                    <constraint firstItem="aBJ-tV-rF6" firstAttribute="top" secondItem="4bv-YX-ydU" secondAttribute="top" constant="37" id="Yn7-7n-1P0"/>
+                    <constraint firstItem="v5u-be-45Y" firstAttribute="top" secondItem="WM3-X5-Cgy" secondAttribute="bottom" constant="10" id="cyn-F1-jBO"/>
+                    <constraint firstItem="v5u-be-45Y" firstAttribute="trailing" secondItem="4bv-YX-ydU" secondAttribute="trailingMargin" id="eJ6-Ua-RvR"/>
+                    <constraint firstItem="v5u-be-45Y" firstAttribute="leading" secondItem="aBJ-tV-rF6" secondAttribute="trailing" constant="10" id="fuC-KH-tK5"/>
+                    <constraint firstAttribute="bottom" secondItem="aBJ-tV-rF6" secondAttribute="bottom" constant="37" id="kGI-O7-FhE"/>
+                    <constraint firstItem="WM3-X5-Cgy" firstAttribute="leading" secondItem="v5u-be-45Y" secondAttribute="leading" id="nM8-KC-cAR"/>
+                    <constraint firstItem="aBJ-tV-rF6" firstAttribute="leading" secondItem="4bv-YX-ydU" secondAttribute="leading" constant="8" id="qZD-mC-063"/>
+                </constraints>
             </tableViewCellContentView>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             <connections>

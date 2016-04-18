@@ -98,7 +98,10 @@ NSString *userPlaceHolder;
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   LPReminderCell *cell =
       [self.tableView dequeueReusableCellWithIdentifier:@"Cell"];
-
+    cell.urgencyLabel.text = @"";
+    cell.urgencyLabel.clipsToBounds = true;
+    cell.urgencyLabel.layer.cornerRadius = 5.0f;
+    
     EKReminder *evnt = self.events[indexPath.row];
     if (evnt.dueDateComponents != nil) {
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -108,11 +111,23 @@ NSString *userPlaceHolder;
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateStyle:NSDateFormatterMediumStyle];
         [formatter setTimeStyle:NSDateFormatterShortStyle];
+        if ([date compare:[NSDate date]] == NSOrderedDescending) {
+            NSLog(@"date1 is later than date2");
+             cell.urgencyLabel.backgroundColor = [UIColor redColor];
+        } else if ([date compare:[NSDate date]] == NSOrderedAscending) {
+            NSLog(@"date1 is earlier than date2");
+             cell.urgencyLabel.backgroundColor = [UIColor greenColor];
+        } else {
+            NSLog(@"dates are the same");
+             cell.urgencyLabel.backgroundColor = [UIColor yellowColor];
+            
+        }
         
         
         cell.dateLabel.text =  [formatter stringFromDate: date];
     }else{
         cell.dateLabel.text = @"No due date";
+        cell.urgencyLabel.backgroundColor = [UIColor greenColor];
     }
     
     cell.contentView.backgroundColor = [UIColor clearColor];
