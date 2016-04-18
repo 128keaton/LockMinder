@@ -35,9 +35,8 @@ NSString *userPlaceHolder;
 
 
     
-    UINib *nib = [UINib nibWithNibName:@"LPReminderCell" bundle:[NSBundle bundleWithPath:@"/Library/Application Support/LockMinder"]];
-    [[self tableView] registerNib:nib forCellReuseIdentifier:@"Cell"];
-    
+    [self.tableView registerNib: [UINib nibWithNibName: @"LPReminderCell" bundle: [NSBundle bundleWithPath:@"/Library/Application Support/LockMinder"]]forCellReuseIdentifier:@"Cell"];
+
 
   return self;
 }
@@ -116,11 +115,8 @@ NSString *userPlaceHolder;
         cell.dateLabel.text = @"No due date";
     }
     
-
-    cell.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
-    cell.titleLabel.numberOfLines = 0;
-    cell.titleLabel.textColor = [UIColor whiteColor];
-    cell.backgroundColor = [UIColor clearColor];
+    cell.contentView.backgroundColor = [UIColor clearColor];
+    cell.titleLabel.text = evnt.title;
   return cell;
 }
 
@@ -148,12 +144,12 @@ NSString *userPlaceHolder;
                                    userInfo:nil
                                     repeats:NO];
     self.tableView.estimatedRowHeight = 100.0;
-    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.rowHeight = 100.0;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
     heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-  return UITableViewAutomaticDimension;
+  return 100.0;
 }
 - (void)pageWillDismiss {
   NSLog(@"pageWillDismiss called!");
