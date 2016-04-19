@@ -55,19 +55,33 @@ NSString *userPlaceHolder;
     NSSortDescriptor *sortDescriptor;
     sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES] ;
     NSArray *sortDescriptors = [NSArray arrayWithObject:sortDescriptor];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"shouldUseRemindersAll"] == true) {
+          NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
+        [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
+            self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
+            
+        }];
+    }else{
+   
+        NSArray *cals = [self.store calendarsForEntityType:EKEntityTypeReminder];
+     
+        for (EKCalendar *zCal in cals){
+            if (zCal.title == [[NSUserDefaults standardUserDefaults] objectForKey: @"thisIsANiceHotel"]) {
+                NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: @[zCal]];
+                                          [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
+                    self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
+                    
+                }];
+            }
+        }
+            
+    }
+  
     
-    NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
+  
     
-    NSPredicate *completePredicate = [self.store predicateForCompletedRemindersWithCompletionDateStarting: nil ending: nil calendars: nil];
-    
-    [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
-        self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
-        
-    }];
-    [self.store fetchRemindersMatchingPredicate:completePredicate completion:^(NSArray *incompleted) {
-        self.completed = [[incompleted sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
-        
-    }];
+   
+
     
    [self.refreshControl endRefreshing];
     NSRange range = NSMakeRange(0, [self numberOfSectionsInTableView:self.tableView]);

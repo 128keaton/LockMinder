@@ -9,7 +9,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = LockMinder
 LockMinder_FILES = Tweak.xm LockMinderViewController.m MBProgressHUD.m LPReminderCell.m
-LockMinder_FRAMEWORKS = UIKit Accounts Social Foundation QuartzCore CoreGraphics EventKit Preferences
+LockMinder_FRAMEWORKS = UIKit Accounts Social Foundation QuartzCore CoreGraphics EventKit 
 LockMinder_LIBRARIES = lockpages
 LockMinde_PRIVATE_FRAMEWORKS = Preferences
 LockMinder_LDFLAGS += -fobjc-arc
