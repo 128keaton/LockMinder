@@ -12,19 +12,19 @@
     NSString *_settingsFile;
     NSString *enabledKey;
     NSString *disabledKey;
+    int selectedIndex;
+
     
 }
 @property(strong, nonatomic) NSMutableArray *reminders;
 @property (strong, nonatomic) EKEventStore *store;
 @property (strong, nonatomic) NSMutableArray *events;
 @property (strong, nonatomic) NSMutableArray *completed;
-@property (strong, nonatomic) NSMutableArray *arrayTag;
 
 @end
 
 @implementation PreferencesListController
 
-@synthesize arrayTag;
 -(void)viewDidLoad{
     [super viewDidLoad];
     UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 0.0f, 0.0f) style:UITableViewStyleGrouped];
@@ -32,10 +32,11 @@
     tableView.delegate = self;
     self.view = tableView;
     [self refreshData];
-    [self.navigationItem setTitle: @"Made with Bananas"];
+    [self.navigationItem setTitle: @"LockMinder"];
     NSLog(@"potato windows");
-    arrayTag = [NSMutableArray array];
     
+    selectedIndex = -1;
+
     [(UITableView *)self.view reloadData];
     
 }
@@ -53,38 +54,101 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)table {
-    return 1;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
-    return self.reminders.count;
-}
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
-}
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cell"] autorelease];
-
-    EKCalendar *cal = self.reminders[indexPath.row];
-    
-    cell.textLabel.text = cal.title;
-    
-    cell.tag = indexPath.row;
-    NSString *strCellTag = [NSString stringWithFormat:@"%ld", (long)cell.tag];
-    if(![arrayTag containsObject:strCellTag])
-    {
-        [arrayTag addObject:strCellTag];
+    if (section == 0) {
+        return 2;
+    }else{
+        return self.reminders.count;
     }
-
-    return cell;
+  
 }
-
--(void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath   *)indexPath
+{   if(indexPath.section == 1){
+        EKCalendar *cal = self.reminders[indexPath.row];
+    [[NSUserDefaults standardUserDefaults] setObject: cal.title forKey: @"thisIsANiceHotel"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    [tableView deselectRowAtIndexPath: indexPath animated: true];
+    selectedIndex = indexPath.row;
+    [tableView reloadData];
+    }
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *stringToMove = [arrayTag objectAtIndex:sourceIndexPath.row];
-    [arrayTag removeObjectAtIndex:sourceIndexPath.row];
-    [arrayTag insertObject:stringToMove atIndex:destinationIndexPath.row];
+    if (indexPath.section == 0 && indexPath.row == 0) {
+        return 100;
+    }else{
+        return 44;
+    }
 }
+
+- (void) switchChanged:(id)sender {
+    UISwitch* switchControl = sender;
+    NSLog( @"The switch is %@", switchControl.on ? @"ON" : @"OFF" );
+    [[NSUserDefaults standardUserDefaults] setBool: switchControl.on forKey: @"shouldUseRemindersAll"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == 0) {
+             UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cell"] autorelease];
+         UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+        UIImage *image = [UIImage imageWithContentsOfFile:[[NSBundle bundleWithPath:@"/Library/Application Support/LockMinder"] pathForResource:@"background" ofType:@"png"]];
+        switch (indexPath.row) {
+            case 0:
+           
+                cell.backgroundView = [[UIImageView alloc]init];
+     
+                [(UIImageView *)cell.backgroundView setImage: image];
+                cell.backgroundView.contentMode = UIViewContentModeScaleAspectFill;
+                cell.backgroundView.clipsToBounds = true;
+                cell.backgroundView.backgroundColor = [UIColor redColor];
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                return cell;
+                break;
+            case 1:
+
+                cell.textLabel.text = @"Use all reminder lists?";
+               
+                cell.accessoryView = switchView;
+                [switchView setOn:[[NSUserDefaults standardUserDefaults]boolForKey:@"shouldUseRemindersAll" ] animated:NO];
+                [switchView addTarget:self action:@selector(switchChanged:) forControlEvents:UIControlEventValueChanged];
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                return cell;
+                break;
+                
+            default:
+                
+                return cell;
+                break;
+        }
+        
+    }else{
+             UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cell"] autorelease];
+        if(indexPath.row == selectedIndex && selectedIndex != -1)
+        {
+            cell.accessoryType = UITableViewCellAccessoryCheckmark;
+        }
+        else
+        {
+            cell.accessoryType = UITableViewCellAccessoryNone;
+        }
+        
+   
+
+        EKCalendar *cal = self.reminders[indexPath.row];
+    
+        cell.textLabel.text = cal.title;
+    
+    
+        return cell;
+    }
+}
+
+
 
 @end
 
