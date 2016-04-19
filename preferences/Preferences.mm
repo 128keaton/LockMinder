@@ -15,17 +15,18 @@
   NSString *disabledKey;
   int selectedIndex;
         NSString *filePath;
-        UISwitch *switchBig;
+       
 }
 @property(strong, nonatomic) NSMutableArray *reminders;
 @property(strong, nonatomic) EKEventStore *store;
 @property(strong, nonatomic) NSMutableArray *events;
 @property(strong, nonatomic) NSMutableArray *completed;
-
+@property(strong, nonatomic)  UISwitch *switchBig;
 @end
 
 @implementation PreferencesListController
 
+@synthesize switchBig;
 - (void)viewDidLoad {
   [super viewDidLoad];
   UITableView *tableView =
@@ -113,11 +114,20 @@
     EKCalendar *cal = self.reminders[indexPath.row];
     [[NSUserDefaults standardUserDefaults] setObject:cal.title
                                               forKey:@"thisIsANiceHotel"];
+    [[NSUserDefaults standardUserDefaults] setBool:false forKey:@"shouldUseRemindersAll"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     [tableView deselectRowAtIndexPath:indexPath animated:true];
       [self saveList: cal.title];
       [self saveListOption: false];
-      [switchBig setOn: false animated: true];
+
+
+      for (UIView *view in self.view.subviews) {
+          if (view.tag == 1773) {
+              [(UISwitch *)view setOn: NO animated: YES];
+          }
+      }
+      
+      [switchBig setOn: NO animated: YES];
     selectedIndex = indexPath.row;
     [tableView reloadData];
   } else if (indexPath.section == 2){
@@ -138,6 +148,52 @@
     return 44;
   }
 }
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 35.0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    if (section == 2) {
+  
+    UILabel *label = [[UILabel alloc] init];
+    label.frame = CGRectMake(20, 8, 320, 20);
+
+    label.text = @"Copyright 2016 Keaton Burleson";
+    
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:label];
+    
+    return view;
+    }else{
+        return nil;
+    }
+    
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if (section == 1) {
+        
+    
+    
+    UILabel *label = [[UILabel alloc] init];
+    label.frame = CGRectMake(20, 8, 320, 20);
+
+    label.font = [UIFont boldSystemFontOfSize:16];
+    label.text = @"LISTS";
+       
+        
+    
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:label];
+    
+    return view;
+    }else{
+        return nil;
+    }
+}
+
 
 - (void)switchChanged:(id)sender {
   UISwitch *switchControl = sender;
@@ -157,6 +213,7 @@
                      initWithStyle:UITableViewCellStyleSubtitle
                    reuseIdentifier:@"cell"] autorelease];
     switchBig = [[UISwitch alloc] initWithFrame:CGRectZero];
+      switchBig.tag = 1337;
     UIImage *image = [UIImage
         imageWithContentsOfFile:
             [[NSBundle
@@ -180,7 +237,7 @@
       cell.accessoryView = switchBig;
       [switchBig setOn:[[NSUserDefaults standardUserDefaults]
                             boolForKey:@"shouldUseRemindersAll"]
-               animated:NO];
+               animated:true];
       [switchBig addTarget:self
                      action:@selector(switchChanged:)
            forControlEvents:UIControlEventValueChanged];

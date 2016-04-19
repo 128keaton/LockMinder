@@ -137,7 +137,17 @@ NSString *userPlaceHolder;
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.backgroundView = error;
     }
+    [UIView transitionWithView:self.tableView
+duration:0.35f
+options:UIViewAnimationOptionTransitionCrossDissolve
+animations:^(void)
+    {
+        
     [self.tableView reloadData];
+        
+    }
+completion:nil];
+    
    [self.refreshControl endRefreshing];
     
 
