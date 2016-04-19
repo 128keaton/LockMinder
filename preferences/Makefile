@@ -3,7 +3,7 @@ include theos/makefiles/common.mk
 BUNDLE_NAME = Preferences
 Preferences_FILES = Preferences.mm
 Preferences_INSTALL_PATH = /Library/PreferenceBundles
-Preferences_FRAMEWORKS = UIKit
+Preferences_FRAMEWORKS = UIKit Preferences QuartzCore EventKit
 Preferences_PRIVATE_FRAMEWORKS = Preferences
 
 include $(THEOS_MAKE_PATH)/bundle.mk
