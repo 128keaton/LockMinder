@@ -43,51 +43,122 @@ NSString *userPlaceHolder;
 
 - (void)pageWillPresent {
   NSLog(@"pageWillPresent called!");
+    [self updateView];
 
    
     
 }
+//Should use individual list?
+-(BOOL)shouldUseIndividual{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    
+    BOOL exists;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    exists = [fileManager fileExistsAtPath:filePath];
+    if (exists == false) {
+        return false;
+    }else{
+        NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+        return [[plistdict objectForKey:@"useLists"] boolValue];
+        
+    }
+}
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    UILabel *label = [[UILabel alloc] init];
+    label.frame = CGRectMake(20, 8, 320, 20);
+    label.backgroundColor = [UIColor clearColor];
+    label.textColor = [UIColor whiteColor];
+    label.text = @"Made with <3 in Memphis, TN";
+    
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:label];
+    
+    return view;
+
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    NSString *sectionTitle = [self tableView:tableView titleForHeaderInSection:section];
+    if (sectionTitle == nil) {
+        return nil;
+    }
+    
+    UILabel *label = [[UILabel alloc] init];
+    label.frame = CGRectMake(20, 8, 320, 20);
+    label.backgroundColor = [UIColor clearColor];
+    label.textColor = [UIColor whiteColor];
+    label.font = [UIFont boldSystemFontOfSize:16];
+    label.text = sectionTitle;
+    
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:label];
+    
+    return view;
+}
+
+//If so, what list?
+-(NSString *)fetchListTitle{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    
+
+    NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+    return [plistdict objectForKey:@"list"];
+    
+    
+}
+
 -(void)updateView{
-  
+  //Check for store
     if(self.store == nil){
         self.store = [[EKEventStore alloc] init];
     }
-    NSSortDescriptor *sortDescriptor;
-    sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"priority" ascending:YES] ;
-    NSArray *sortDescriptors = [NSArray arrayWithObject:sortDescriptor];
-    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"shouldUseRemindersAll"] == true) {
-          NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
-        [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
-            self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
+   
+    
+    BOOL individual = [self shouldUseIndividual];
+
+
+    @try {
+        [self.store fetchRemindersMatchingPredicate:[self fetchPredicate: individual] completion:^(NSArray *completed) {
+            self.events = [completed mutableCopy];
             
         }];
+        
+    } @catch (NSException *exception) {
+        UILabel *error = [[UILabel alloc]initWithFrame: self.view.frame];
+        error.text = @"Error fetching reminders, try again";
+        error.textAlignment = NSTextAlignmentCenter;
+        error.textColor = [UIColor whiteColor];
+        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        self.tableView.backgroundView = error;
+    }
+    [self.tableView reloadData];
+   [self.refreshControl endRefreshing];
+    
+
+}
+-(NSPredicate *)fetchPredicate: (BOOL) single{
+    if(self.store == nil){
+        self.store = [[EKEventStore alloc] init];
+    }
+    
+    if (single == true){
+        return [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
     }else{
-   
-        NSArray *cals = [self.store calendarsForEntityType:EKEntityTypeReminder];
-     
-        for (EKCalendar *zCal in cals){
-            if (zCal.title == [[NSUserDefaults standardUserDefaults] objectForKey: @"thisIsANiceHotel"]) {
-                NSPredicate *predicate = [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: @[zCal]];
-                                          [self.store fetchRemindersMatchingPredicate:predicate completion:^(NSArray *completed) {
-                    self.events = [[completed sortedArrayUsingDescriptors: sortDescriptors] mutableCopy];
-                    
-                }];
+        NSString *constTitle = [self fetchListTitle];
+        for (EKCalendar *calendar in [self.store calendarsForEntityType: EKEntityTypeReminder]) {
+            if (calendar.title == constTitle) {
+                return [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: @[calendar]];
             }
         }
-            
+        
     }
-  
-    
-  
-    
-   
-
-    
-   [self.refreshControl endRefreshing];
-    NSRange range = NSMakeRange(0, [self numberOfSectionsInTableView:self.tableView]);
-    NSIndexSet *sections = [NSIndexSet indexSetWithIndexesInRange:range];
-    [self.tableView reloadSections:sections withRowAnimation:UITableViewRowAnimationAutomatic];
-
+   // return [self.store predicateForIncompleteRemindersWithDueDateStarting: nil ending: nil calendars: nil];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -100,6 +171,7 @@ NSString *userPlaceHolder;
     return 35.0;
 }
 
+
 - (NSInteger)tableView:(UITableView *)tableView
  numberOfRowsInSection:(NSInteger)section {
     if (section == 0) {
@@ -110,11 +182,16 @@ NSString *userPlaceHolder;
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
   LPReminderCell *cell =
       [self.tableView dequeueReusableCellWithIdentifier:@"Cell"];
     cell.urgencyLabel.text = @"";
     cell.urgencyLabel.clipsToBounds = true;
     cell.urgencyLabel.layer.cornerRadius = 5.0f;
+    
+        
+    if (self.events.count != 0) {
+        
     
     EKReminder *evnt = self.events[indexPath.row];
     if (evnt.dueDateComponents != nil) {
@@ -146,13 +223,19 @@ NSString *userPlaceHolder;
     
     cell.contentView.backgroundColor = [UIColor clearColor];
     cell.titleLabel.text = evnt.title;
+    }
   return cell;
 }
 
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    return @"Incomplete";
+    if ([self shouldUseIndividual] == true) {
+        return [self fetchListTitle];
+    }else{
+        return @"Incomplete";
+    }
+    
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -163,10 +246,8 @@ NSString *userPlaceHolder;
 }
 - (void)pageDidPresent {
   NSLog(@"pageDidPresent called!");
-     [self updateView];
-    NSRange range = NSMakeRange(0, [self numberOfSectionsInTableView:self.tableView]);
-    NSIndexSet *sections = [NSIndexSet indexSetWithIndexesInRange:range];
-    [self.tableView reloadSections:sections withRowAnimation:UITableViewRowAnimationAutomatic];
+
+
     [NSTimer scheduledTimerWithTimeInterval:0.2
                                      target:self
                                    selector:@selector(updateView)
@@ -187,10 +268,10 @@ NSString *userPlaceHolder;
 - (void)pageDidDismiss {
   NSLog(@"pageDidDismiss called!");
 }
-- (void)viewDidAppear:(BOOL)animated{
+/*- (void)viewDidAppear:(BOOL)animated{
     [self updateView];
     [super viewDidAppear: true];
-}
+}*/
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
  
     self.hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
@@ -209,6 +290,7 @@ NSString *userPlaceHolder;
     self.hud.labelText = NSLocalizedString(@"Completed!", @"HUD done title");
     EKReminder *event = self.events[indexPath.row];
     event.completed = true;
+    
     [self.store saveReminder: event commit: true error: nil];
     [self.events removeObjectAtIndex: indexPath.row];
     [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
@@ -228,6 +310,6 @@ NSString *userPlaceHolder;
 }
 
 - (NSInteger)priority {
-  return 10;
+  return 20;
 }
 @end

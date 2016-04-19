@@ -2,7 +2,10 @@
 #import "lockpages/LPPage-Protocol.h"
 #import "MBProgressHUD.h"
 #import <EventKit/EventKit.h>
-@interface LockMinderViewController : UITableViewController <LPPage, UITextFieldDelegate>
+@interface LockMinderViewController : UITableViewController <LPPage, UITextFieldDelegate>{
+    NSString *filePath;
+
+}
 @property (nonatomic, retain) UIView *ibView;
 @property (strong, nonatomic) NSArray *dataSource;
 @property (strong, nonatomic) MBProgressHUD *hud;

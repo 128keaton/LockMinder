@@ -14,6 +14,8 @@
   NSString *enabledKey;
   NSString *disabledKey;
   int selectedIndex;
+        NSString *filePath;
+        UISwitch *switchBig;
 }
 @property(strong, nonatomic) NSMutableArray *reminders;
 @property(strong, nonatomic) EKEventStore *store;
@@ -35,10 +37,49 @@
   [self refreshData];
   [self.navigationItem setTitle:@"LockMinder"];
   NSLog(@"potato windows");
-
+    
   selectedIndex = -1;
 
   [(UITableView *)self.view reloadData];
+}
+-(void)saveList: (NSString *)list{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    BOOL exists;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    exists = [fileManager fileExistsAtPath:filePath];
+    if (exists == false) {
+        NSMutableDictionary *plistdict = [[NSMutableDictionary alloc]init];
+        [plistdict setObject: list forKey: @"list"];
+        [plistdict writeToFile:filePath atomically:YES];
+    }else{
+        NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+        [plistdict setObject: list forKey: @"list"];
+        [plistdict writeToFile:filePath atomically:YES];
+    }
+
+    
+}
+-(void)saveListOption: (BOOL) option{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    BOOL exists;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    exists = [fileManager fileExistsAtPath:filePath];
+    if (exists == false) {
+        NSMutableDictionary *plistdict = [[NSMutableDictionary alloc]init];
+        [plistdict setObject: @(option) forKey: @"useLists"];
+        [plistdict writeToFile:filePath atomically:YES];
+    }else{
+        NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+        [plistdict setObject: @(option) forKey: @"useLists"];
+        [plistdict writeToFile:filePath atomically:YES];
+    }
+
 }
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:true];
@@ -74,6 +115,9 @@
                                               forKey:@"thisIsANiceHotel"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     [tableView deselectRowAtIndexPath:indexPath animated:true];
+      [self saveList: cal.title];
+      [self saveListOption: false];
+      [switchBig setOn: false animated: true];
     selectedIndex = indexPath.row;
     [tableView reloadData];
   } else if (indexPath.section == 2){
@@ -101,6 +145,7 @@
   [[NSUserDefaults standardUserDefaults] setBool:switchControl.on
                                           forKey:@"shouldUseRemindersAll"];
   [[NSUserDefaults standardUserDefaults] synchronize];
+[self saveListOption: switchControl.on];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
@@ -111,7 +156,7 @@
             ?: [[[UITableViewCell alloc]
                      initWithStyle:UITableViewCellStyleSubtitle
                    reuseIdentifier:@"cell"] autorelease];
-    UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+    switchBig = [[UISwitch alloc] initWithFrame:CGRectZero];
     UIImage *image = [UIImage
         imageWithContentsOfFile:
             [[NSBundle
@@ -132,11 +177,11 @@
 
       cell.textLabel.text = @"Use all reminder lists?";
 
-      cell.accessoryView = switchView;
-      [switchView setOn:[[NSUserDefaults standardUserDefaults]
+      cell.accessoryView = switchBig;
+      [switchBig setOn:[[NSUserDefaults standardUserDefaults]
                             boolForKey:@"shouldUseRemindersAll"]
                animated:NO];
-      [switchView addTarget:self
+      [switchBig addTarget:self
                      action:@selector(switchChanged:)
            forControlEvents:UIControlEventValueChanged];
       cell.selectionStyle = UITableViewCellSelectionStyleNone;
