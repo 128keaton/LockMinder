@@ -240,7 +240,7 @@ completion:nil];
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    if ([self shouldUseIndividual] == true) {
+    if ([self shouldUseIndividual] == false) {
         return [self fetchListTitle];
     }else{
         return @"Incomplete";

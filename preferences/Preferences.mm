@@ -181,7 +181,7 @@
     label.frame = CGRectMake(20, 8, 320, 20);
 
     label.font = [UIFont boldSystemFontOfSize:16];
-    label.text = @"LISTS";
+    label.text = @"LISTS - TAP TO CHOOSE ONE";
        
         
     
