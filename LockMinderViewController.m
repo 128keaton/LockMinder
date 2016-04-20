@@ -323,18 +323,39 @@ completion:nil];
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     
-    [self.tableView deselectRowAtIndexPath: indexPath animated: true];
-    LPReminderCell *cell = [tableView cellForRowAtIndexPath: indexPath];
-    cell.urgencyLabel.backgroundColor = [UIColor colorWithCGColor: cell.urgencyLabel.layer.borderColor];
-    
-    EKReminder *event = self.events[indexPath.row];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        LPReminderCell *cell = [tableView cellForRowAtIndexPath: indexPath];
+        cell.urgencyLabel.backgroundColor = [UIColor colorWithCGColor: cell.urgencyLabel.layer.borderColor];
+        
+       @try {  EKReminder *event = self.events[indexPath.row];
         [self markReminderComplete: event];
+       }@catch (NSException *exception) {
+           [self updateView];
+            [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
+       }
+
+        });
+    @try {
         [self.events removeObjectAtIndex: indexPath.row];
         [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
-        });
+    } @catch (NSException *exception) {
+        [UIView transitionWithView:self.tableView
+                          duration:0.35f
+                           options:UIViewAnimationOptionTransitionCrossDissolve
+                        animations:^(void)
+         {
+             
+             [self.tableView reloadData];
+             
+         }
+                        completion:nil];
+
+         
+    }
+         
     [self showHud];
         [self.hud hide:true afterDelay:1.0f];
+         
     
 }
 -(void)markReminderComplete: (EKReminder *)event{
