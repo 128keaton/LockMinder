@@ -66,6 +66,24 @@ NSString *userPlaceHolder;
         
     }
 }
+-(NSInteger)calulatePriority{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    
+    BOOL exists;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    exists = [fileManager fileExistsAtPath:filePath];
+    if (exists == false) {
+        return 10;
+    }else{
+        NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+        return [[plistdict objectForKey:@"priority"] integerValue];
+        
+    }
+
+}
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
     UILabel *label = [[UILabel alloc] init];
     label.frame = CGRectMake(20, 8, 320, 20);
@@ -197,12 +215,13 @@ completion:nil];
       [self.tableView dequeueReusableCellWithIdentifier:@"Cell"];
     cell.urgencyLabel.text = @"";
     cell.urgencyLabel.clipsToBounds = true;
-    cell.urgencyLabel.layer.cornerRadius = 5.0f;
+    cell.urgencyLabel.layer.cornerRadius = cell.urgencyLabel.frame.size.width / 2;
     
         
     if (self.events.count != 0) {
+    cell.urgencyLabel.backgroundColor = [UIColor clearColor];
+    cell.urgencyLabel.layer.borderWidth = 2.0;
         
-    
     EKReminder *evnt = self.events[indexPath.row];
     if (evnt.dueDateComponents != nil) {
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -212,23 +231,25 @@ completion:nil];
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateStyle:NSDateFormatterMediumStyle];
         [formatter setTimeStyle:NSDateFormatterShortStyle];
+        
         if ([[NSDate date] compare: date] == NSOrderedDescending) {
             NSLog(@"date1 is later than date2");
-             cell.urgencyLabel.backgroundColor = [UIColor redColor];
+             cell.urgencyLabel.layer.borderColor = [[UIColor redColor] CGColor];
         } else if ([[NSDate date] compare: date] == NSOrderedAscending) {
             NSLog(@"date1 is earlier than date2");
-             cell.urgencyLabel.backgroundColor = [UIColor greenColor];
+             cell.urgencyLabel.layer.borderColor = [[UIColor greenColor] CGColor];
         } else {
             NSLog(@"dates are the same");
-             cell.urgencyLabel.backgroundColor = [UIColor yellowColor];
+             cell.urgencyLabel.layer.borderColor = [[UIColor yellowColor] CGColor];
             
         }
+        cell.urgencyLabel.backgroundColor = [UIColor clearColor];
         
         
         cell.dateLabel.text =  [formatter stringFromDate: date];
     }else{
         cell.dateLabel.text = @"No due date";
-        cell.urgencyLabel.backgroundColor = [UIColor greenColor];
+        cell.urgencyLabel.layer.borderColor = [[UIColor greenColor] CGColor];
     }
     
     cell.contentView.backgroundColor = [UIColor clearColor];
@@ -243,7 +264,7 @@ completion:nil];
     if ([self shouldUseIndividual] == false) {
         return [self fetchListTitle];
     }else{
-        return @"Incomplete";
+        return @"All items";
     }
     
 }
@@ -282,11 +303,11 @@ completion:nil];
     [self updateView];
     [super viewDidAppear: true];
 }*/
--(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
- 
-    self.hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+-(void)showHud{
+    self.hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
     self.hud.mode = MBProgressHUDModeCustomView;
-    // Set an image view with a checkmark.
+    
+    
     UIImage *image = [[UIImage
                        imageWithContentsOfFile:@"/Library/Application "
                        @"Support/LockMinder/Contents/"
@@ -298,14 +319,30 @@ completion:nil];
     [imageView setTintColor:[UIColor whiteColor]];
     self.hud.customView = imageView;
     self.hud.labelText = NSLocalizedString(@"Completed!", @"HUD done title");
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    [self.tableView deselectRowAtIndexPath: indexPath animated: true];
+    LPReminderCell *cell = [tableView cellForRowAtIndexPath: indexPath];
+    cell.urgencyLabel.backgroundColor = [UIColor colorWithCGColor: cell.urgencyLabel.layer.borderColor];
+    
     EKReminder *event = self.events[indexPath.row];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self markReminderComplete: event];
+        [self.events removeObjectAtIndex: indexPath.row];
+        [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
+        });
+    [self showHud];
+        [self.hud hide:true afterDelay:1.0f];
+    
+}
+-(void)markReminderComplete: (EKReminder *)event{
     event.completed = true;
     
     [self.store saveReminder: event commit: true error: nil];
-    [self.events removeObjectAtIndex: indexPath.row];
-    [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationFade];
-  
-     [self.hud hide:true afterDelay:1.0f];
+    
+
 }
 - (CGFloat)idleTimerInterval {
   return 60;
@@ -320,6 +357,7 @@ completion:nil];
 }
 
 - (NSInteger)priority {
-  return 20;
+    NSInteger priority = [self calulatePriority];
+    return priority;
 }
 @end

@@ -22,6 +22,7 @@
 @property(strong, nonatomic) NSMutableArray *events;
 @property(strong, nonatomic) NSMutableArray *completed;
 @property(strong, nonatomic)  UISwitch *switchBig;
+@property(strong, nonatomic) UITextField *priorityField;
 @end
 
 @implementation PreferencesListController
@@ -63,6 +64,36 @@
 
     
 }
+
+-(void)savePriority: (NSString *)priority{
+    if (filePath == nil) {
+        filePath = @"/Library/Application Support/LockMinder/settings.plist";
+    }
+    NSCharacterSet* notDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    if ([priority rangeOfCharacterFromSet:notDigits].location == NSNotFound)
+    {
+        NSInteger final = [priority intValue];
+        BOOL exists;
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        
+        exists = [fileManager fileExistsAtPath:filePath];
+        if (exists == false) {
+            NSMutableDictionary *plistdict = [[NSMutableDictionary alloc]init];
+            [plistdict setObject: [NSNumber numberWithInt: final] forKey: @"priority"];
+            [plistdict writeToFile:filePath atomically:YES];
+        }else{
+            NSMutableDictionary *plistdict = [NSMutableDictionary dictionaryWithContentsOfFile:filePath];
+            [plistdict setObject:[NSNumber numberWithInt: final] forKey: @"priority"];
+            [plistdict writeToFile:filePath atomically:YES];
+        }
+
+    }
+    
+    
+    
+}
+
+
 -(void)saveListOption: (BOOL) option{
     if (filePath == nil) {
         filePath = @"/Library/Application Support/LockMinder/settings.plist";
@@ -101,7 +132,7 @@
 - (NSInteger)tableView:(UITableView *)table
  numberOfRowsInSection:(NSInteger)section {
   if (section == 0) {
-    return 2;
+    return 4;
   } else if (section == 1) {
     return self.reminders.count;
   } else {
@@ -110,6 +141,7 @@
 }
 - (void)tableView:(UITableView *)tableView
     didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
   if (indexPath.section == 1) {
     EKCalendar *cal = self.reminders[indexPath.row];
     [[NSUserDefaults standardUserDefaults] setObject:cal.title
@@ -138,6 +170,15 @@
       [[UIApplication sharedApplication]
           openURL:[NSURL URLWithString:@"https://twitter.com/128keaton"]];
     }
+  }else if (indexPath.section == 0){
+      if (indexPath.row == 3) {
+          [[NSUserDefaults standardUserDefaults] setObject: self.priorityField.text forKey:@"priority"];
+          [[NSUserDefaults standardUserDefaults] synchronize];
+          [tableView deselectRowAtIndexPath: indexPath animated: true];
+          [self.view endEditing:YES];
+          [self respring];
+      }
+      
   }
 }
 - (CGFloat)tableView:(UITableView *)tableView
@@ -203,6 +244,12 @@
   [[NSUserDefaults standardUserDefaults] synchronize];
 [self saveListOption: switchControl.on];
 }
+-(void)respring {
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    system("killall -9 backboardd");
+    #pragma GCC diagnostic pop
+}
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -213,6 +260,7 @@
                      initWithStyle:UITableViewCellStyleSubtitle
                    reuseIdentifier:@"cell"] autorelease];
     switchBig = [[UISwitch alloc] initWithFrame:CGRectZero];
+    
       switchBig.tag = 1337;
     UIImage *image = [UIImage
         imageWithContentsOfFile:
@@ -242,7 +290,27 @@
                      action:@selector(switchChanged:)
            forControlEvents:UIControlEventValueChanged];
       cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
       return cell;
+    }else if (indexPath.row == 2 && indexPath.section == 0){
+        self.priorityField = [[UITextField alloc] initWithFrame: CGRectMake(cell.frame.origin.x, cell.frame.origin.y, cell.frame.size.height, 30)];
+        self.priorityField.placeholder = @"20";
+        cell.accessoryView = self.priorityField;
+        cell.textLabel.text = @"Priority: ";
+        self.priorityField.textAlignment = NSTextAlignmentRight;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        if([[NSUserDefaults standardUserDefaults] objectForKey:@"priority"] != nil){
+            self.priorityField.text = [[NSUserDefaults standardUserDefaults] objectForKey:@"priority"];
+        }else{
+            self.priorityField.text = @"20";
+        }
+        [cell addSubview: self.priorityField];
+          return cell;
+    }else if (indexPath.row == 3 && indexPath.section == 0){
+        cell.textLabel.text = @"Save (will respring)";
+        cell.textLabel.textAlignment = NSTextAlignmentCenter;
+        cell.textLabel.textColor = self.view.tintColor;
+        return cell;
     }
 
   } else if (indexPath.section == 1) {
