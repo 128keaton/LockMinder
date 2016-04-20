@@ -70,7 +70,7 @@
         filePath = @"/Library/Application Support/LockMinder/settings.plist";
     }
     NSCharacterSet* notDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
-    if ([priority rangeOfCharacterFromSet:notDigits].location == NSNotFound)
+    if ([priority rangeOfCharacterFromSet:notDigits].location != NSNotFound)
     {
         NSInteger final = [priority intValue];
         BOOL exists;

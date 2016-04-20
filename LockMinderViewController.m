@@ -304,7 +304,7 @@ completion:nil];
     [super viewDidAppear: true];
 }*/
 -(void)showHud{
-    self.hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
+    self.hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
     self.hud.mode = MBProgressHUDModeCustomView;
     
     
