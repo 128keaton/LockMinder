@@ -89,7 +89,7 @@ NSString *userPlaceHolder;
     label.frame = CGRectMake(20, 8, 320, 20);
     label.backgroundColor = [UIColor clearColor];
     label.textColor = [UIColor whiteColor];
-    label.text = @"Made with <3 in Memphis, TN";
+    label.text = @"Made with ❤️ in Memphis, TN";
     
     UIView *view = [[UIView alloc] init];
     [view addSubview:label];
@@ -110,7 +110,12 @@ NSString *userPlaceHolder;
     label.backgroundColor = [UIColor clearColor];
     label.textColor = [UIColor whiteColor];
     label.font = [UIFont boldSystemFontOfSize:16];
-    label.text = sectionTitle;
+    if (self.events.count != 0) {
+          label.text = sectionTitle;
+    }else{
+          label.text = @"No reminders";
+    }
+  
     
     UIView *view = [[UIView alloc] init];
     [view addSubview:label];
